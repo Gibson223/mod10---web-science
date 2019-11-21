@@ -16,7 +16,6 @@ number_t = 1
 # example rows: n1 n2 n3 p1 p2 t f1 f2
 # returns numpy matrix
 def setup_matrix():
-
 	# number of outgoing connections
 	out_connections_n = number_n + number_p - 1
 	out_connections_p = number_n + number_p
@@ -78,8 +77,38 @@ def setup_matrix():
 
 	return matrix
 
-def converge(matrix, beta, vertex=None):
+def setup_matrix_with_graph(graph, hits=false):
+	axis_len = len(graph.nodes())
+	matrix = np.zeros((graph_len, graph_len))
+	matrix = np.matrix(matrix)
 
+	nodes_dict = {}
+	number = 0
+	# first assign each node a number 
+	for node in graph.nodes():
+		nodes_dict[node] = number
+		number += 1
+	# then setup matrix with those numbers as x or y
+	for x_node in graph.nodes():
+		x_number = nodes_dict[x_node]
+		number_neighbours = len(graph[x_node])
+		if number_neighbours == 0:
+			if not hits:
+				# make circular to avoid spider traps
+				matrix.put((x_number*axis_len + x_number), 1)
+		else:
+			out_probability = float(1)/number_neighbours
+			for y_node in graph[x_node]:
+				y_number = nodes_dict[y_node]
+				if hits:
+					matrix.put((y_number*axis_len + x_number), 1)
+				else:
+					matrix.put((y_number*axis_len + x_number), out_probability)
+
+	return matrix
+
+
+def converge(matrix, beta, vertex=None):
 	matrix_size = len(matrix)
 	empty_vertex = np.arange(matrix_size, dtype=float)
 	scalar_beta = np.full_like(empty_vertex, beta)
