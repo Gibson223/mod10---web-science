@@ -4,7 +4,7 @@
 # In[175]:
 
 
-get_ipython().run_line_magic('matplotlib', 'inline')
+# get_ipython().run_line_magic('matplotlib', 'inline')
 import datetime as dt
 import json
 import os
@@ -102,9 +102,4 @@ ex2_graph1()
 
 # In[122]:
 
-
-for id in [song["id"] for song in json.load(open(f"youtube_top100/20151109_1800_data.json", "r"))]:
-    print(song_jsons_youtube[id][0]["snippet"]["title"])
-    views_time(ids=[id], text=""  ,
-               save_path= "savefigs3/" + song_jsons_youtube[id][0]["snippet"]["title"], songjsons=song_jsons_youtube)
 
