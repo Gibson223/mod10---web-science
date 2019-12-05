@@ -89,25 +89,28 @@ def get_viewcounts(youtube_api_key, video_id_list):
     viewcount_list = []
 
     for repeat in range(repeat_times):
-        request_list = video_id_list[:50]
-        video_id_list = video_id_list[50:]
+        try:
+            request_list = video_id_list[:50]
+            video_id_list = video_id_list[50:]
 
-        ids_string = str(request_list)
-        ids_string = ids_string.replace("[", "")
-        ids_string = ids_string.replace("]", "")
-        ids_string = ids_string.replace("'", "")
+            ids_string = str(request_list)
+            ids_string = ids_string.replace("[", "")
+            ids_string = ids_string.replace("]", "")
+            ids_string = ids_string.replace("'", "")
 
-        request = youtube.videos().list(
-            part="statistics", # get all stats
-            maxResults=50, #50 is max amount of results per page
-            id= ids_string
-        )
-        response = request.execute()
-        items = response["items"]
+            request = youtube.videos().list(
+                part="statistics", # get all stats
+                maxResults=50, #50 is max amount of results per page
+                id= ids_string
+            )
+            response = request.execute()
+            items = response["items"]
 
-        for item in items:
-            viewcount = int(item["statistics"]["viewCount"])
-            viewcount_list.append(viewcount)
+            for item in items:
+                viewcount = int(item["statistics"]["viewCount"])
+                viewcount_list.append(viewcount)
+        except:
+            pass
 
     return viewcount_list
 
@@ -127,9 +130,42 @@ def run_50(youtube_api_key):
         except:
             pass
 
-    viewcount_list = get_viewcounts(youtube_api_key, id_list)
+    try:
+        viewcount_list = get_viewcounts(youtube_api_key, id_list)
+    except:
+        pass
 
     return viewcount_list, id_list, title_list
+
+def run_low_cost():
+    id_list = []
+    title_list = []
+
+    count = 0
+    for filename in os.listdir(JSON_FILES_PATH):
+        if filename.endswith(".json"):
+            count += 1
+            if count <= 100:
+                with open(JSON_FILES_PATH + filename, "r") as file:
+                    json_data = json.load(file)
+
+                video_list = json_data["items"]
+
+                for video in video_list:
+                    video_id = video["id"]["videoId"]
+                    id_list.append(video_id)
+                    video_title = video["snippet"]["title"]
+                    title_list.append(video_title)
+
+    viewcount_list = get_viewcounts(YOUTUBE_API_KEY, id_list)
+
+    print(id_list)
+    print(title_list)
+    print(viewcount_list)
+
+    graph_list = sorted(viewcount_list, reverse=True)
+    show_graph(graph_list)
+    show_graph(graph_list, loglog=True)
 
 
 def run_code():
@@ -144,4 +180,5 @@ def run_code():
 
 
 # execute the code
-run_code()
+# run_code()
+run_low_cost()
