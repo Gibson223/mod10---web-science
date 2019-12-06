@@ -18,17 +18,20 @@ START_VID_TITLE = "Adele - Hello"
 # used by the run_graphs() function
 def show_graph(views_list, loglog=False):
     plt.plot(views_list, 'o', label="x videos have more than y views")
-    plt.title("Distribution on views for recommended videos")
     plt.ylabel("y: Total number of views")
     plt.xlabel("x: Number of videos")
+    plt.title("Distribution on views for recommended videos")
 
+    filename = "Youtube Recommendations Views Plot"
     if loglog:
+        filename = "Youtube Recommendations Views Log-Log Plot"
+        plt.title("Log-Log Distribution on views for recommended videos")
         plt.xscale("log")
         plt.yscale("log")
 
     plt.autoscale()
     plt.legend()
-    filename = "Youtube Recommendations Views Plot"
+    
     plt.savefig(f"plots/{filename}" + ".png")
     plt.show()
     plt.clf()
@@ -118,10 +121,11 @@ def get_viewcounts(youtube_api_key, video_id_list):
 def run_50(youtube_api_key):
     id_list = [START_VID_ID]
     title_list = [START_VID_TITLE]
+    viewcount_list = []
 
     # get all video ids
     video_id = START_VID_ID
-    for number in range(1, 50):
+    for number in range(1, 80):
         try:
             get_related_videos(youtube_api_key, video_id)
             video_id, video_title = get_random_video(video_id)
@@ -145,7 +149,7 @@ def run_low_cost():
     for filename in os.listdir(JSON_FILES_PATH):
         if filename.endswith(".json"):
             count += 1
-            if count <= 100:
+            if count <= 1000:
                 with open(JSON_FILES_PATH + filename, "r") as file:
                     json_data = json.load(file)
 
