@@ -11,7 +11,9 @@ def rungame(players, turns, percentage):
 		array = np.sort(array)
 
 		if (turn-1)%100 == 0:
+			# simple_graph(array, turn)
 			xbyy(array, turn, percentage)
+
 			# xownsy_graph(array, turn+1, percentage)
 			# simple_graph(array, turn)
 
@@ -43,7 +45,10 @@ def doturn(array, percentage):
 def simple_graph(array, turn):
 	plt.loglog()
 	plt.plot(array)
-	plt.savefig(f"figures/simple/{turn}" + ".png")
+	plt.xlabel("Euro")
+	plt.ylabel("Participant, sorted by least money first")
+	plt.title("Amount of money per participant")
+	plt.savefig(f"figures/simple/loglog/{turn}" + ".png")
 	plt.clf()
 
 def xbyy(array, turn, percentage):
@@ -61,8 +66,10 @@ def xbyy(array, turn, percentage):
 
 		p_wealth_list.append(summed/total*100)
 
+	plt.loglog()
+	p_wealth_list = p_wealth_list[::-1]
 	plt.bar(np.arange(bins), p_wealth_list)
-	plt.xticks(np.arange(bins), np.full(bins, f"{int(100/bins)}%"))
+	# plt.xticks(np.arange(bins), np.full(bins, f"{int(100/bins)}%"))
 	plt.ylabel("Percentage of wealth")
 	plt.title(f"Time periods={turn}, p={percentage}")
 
@@ -80,7 +87,7 @@ def xbyy(array, turn, percentage):
 	# plt.plot(x, polynomial(x), "-")
 
 
-	plt.savefig(f"figures/question3/loglog/{turn}" + ".png")
+	plt.savefig(f"figures/question3/{turn}" + ".png")
 	plt.clf()
 
 
