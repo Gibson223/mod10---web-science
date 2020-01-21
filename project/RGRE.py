@@ -5,13 +5,14 @@ def rungame(players, turns, percentage):
 	start_amount = 100
 	array = setup(players, start_amount)
 
-	for turn in range(turns):
+	for turn in range(1, turns+1):
 		array = doturn(array, percentage)
 
 		array = np.sort(array)
 
-		if turn%100 == 0:
-			xownsy_graph(array, turn+1, percentage)
+		if (turn-1)%100 == 0:
+			xbyy(array, turn, percentage)
+			# xownsy_graph(array, turn+1, percentage)
 			# simple_graph(array, turn)
 
 	# print(np.sum(array))
@@ -45,6 +46,44 @@ def simple_graph(array, turn):
 	plt.savefig(f"figures/simple/{turn}" + ".png")
 	plt.clf()
 
+def xbyy(array, turn, percentage):
+	total = np.sum(array)
+	bins = 10
+	binsize = int(len(array)/bins)
+
+	p_wealth_list = []
+
+	for i in range(1, bins+1):
+		first_index = binsize*(i-1)
+		last_index = binsize*i
+		indices = list(range(first_index, last_index))
+		summed = array[indices].sum()
+
+		p_wealth_list.append(summed/total*100)
+
+	plt.bar(np.arange(bins), p_wealth_list)
+	plt.xticks(np.arange(bins), np.full(bins, f"{int(100/bins)}%"))
+	plt.ylabel("Percentage of wealth")
+	plt.title(f"Time periods={turn}, p={percentage}")
+
+
+	# x = np.arange(bins)
+	# y = p_wealth_list
+
+	# weights = np.ones((len(x)), dtype=int)
+	# weights[0] = weights[0]*10
+	# weights[-1] = weights[-1]*10
+
+	# polyfit = np.polyfit(x, y, deg=2, w=weights)
+	# polynomial = np.poly1d(polyfit)
+	# print(polynomial)
+	# plt.plot(x, polynomial(x), "-")
+
+
+	plt.savefig(f"figures/question3/loglog/{turn}" + ".png")
+	plt.clf()
+
+
 def xownsy_graph(array, turn, percentage):
 	loglog = False
 
@@ -75,13 +114,13 @@ def xownsy_graph(array, turn, percentage):
 	y = m_percent_list
 	plt.plot(x, y, 'o')
 
-	weights = np.ones((len(x)), dtype=int)
-	weights[0] = weights[0]*10
-	weights[-1] = weights[-1]*10
 
-	polyfit = np.polyfit(x, y, deg=2)
-	polynomial = np.poly2d(polyfit)
-	print(polynomial)
+	# weights = np.ones((len(x)), dtype=int)
+	# weights[0] = weights[0]*10
+	# weights[-1] = weights[-1]*10
+	# polyfit = np.polyfit(x, y, deg=2)
+	# polynomial = np.poly1d(polyfit)
+	# print(polynomial)
 
 
 	plt.plot(x, polynomial(x), "-")
