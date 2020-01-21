@@ -1,188 +1,111 @@
-import json
-import random
-import os
-import googleapiclient.discovery
-import matplotlib
-import matplotlib.pyplot as plt
 import numpy as np
+import matplotlib.pyplot as plt
 
-JSON_FILES_PATH = "json/"
+def rungame(players, turns, percentage):
+	start_amount = 100
+	array = setup(players, start_amount)
 
-YOUTUBE_API_KEY = "YOUTUBE_API_KEY_HERE"
+	for turn in range(turns):
+		array = doturn(array, percentage)
 
-START_VID_ID = "YQHsXMglC9A" # Adele - Hello
-START_VID_TITLE = "Adele - Hello"
+		array = np.sort(array)
 
-# plot the graphs of the views
-# as a function of how many songs have more views than that
-# used by the run_graphs() function
-def show_graph(views_list, loglog=False):
-    plt.plot(views_list, 'o', label="x videos have more than y views")
-    plt.ylabel("y: Total number of views")
-    plt.xlabel("x: Number of videos")
-    plt.title("Distribution on views for recommended videos")
+		if turn%100 == 0:
+			xownsy_graph(array, turn+1, percentage)
+			# simple_graph(array, turn)
 
-    filename = "Youtube Recommendations Views Plot"
-    if loglog:
-        filename = "Youtube Recommendations Views Log-Log Plot"
-        plt.title("Log-Log Distribution on views for recommended videos")
-        plt.xscale("log")
-        plt.yscale("log")
+	# print(np.sum(array))
 
-    plt.autoscale()
-    plt.legend()
-    
-    plt.savefig(f"plots/{filename}" + ".png")
-    plt.show()
-    plt.clf()
+	# print(np.sum(array) - players*start_amount)
+	# print(len(array[np.where(array < start_amount)])) 
 
 
-def get_related_videos(youtube_api_key, video_id):
 
-    # Disable OAuthlib's HTTPS verification when running locally.
-    # *DO NOT* leave this option enabled in production.
-    os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"
+def setup(players, start_amount):
+	array = np.full(players, start_amount)
+	return array
 
-    api_service_name = "youtube"
-    api_version = "v3"
+def doturn(array, percentage):
+	np.random.shuffle(array)
 
-    youtube = googleapiclient.discovery.build(
-        api_service_name, api_version, developerKey=youtube_api_key)
+	arrays = np.array_split(array, 2)
+	f_array = arrays[0]
+	l_array = arrays[1]
 
-    request = youtube.search().list(
-        part="snippet", # get all info
-        maxResults=50, #50 is max amount of results per page
-        relatedToVideoId=video_id,
-        type="video",
-        videoCategoryId="10" #category 10 - Music
-    )
-    response = request.execute()
+	f_array = f_array*(1+percentage/100)
+	l_array = l_array*(1-percentage/100)
 
-    with open(f"json/{video_id}.json", 'w', encoding='utf-8') as file:
-        json.dump(response, file)
+	array = np.concatenate((f_array, l_array))
 
-def get_random_video(json_filename):
-    with open(JSON_FILES_PATH + json_filename + ".json", "r") as file:
-        json_data = json.load(file)
+	return array
 
-    video_list = json_data["items"]
+def simple_graph(array, turn):
+	plt.loglog()
+	plt.plot(array)
+	plt.savefig(f"figures/simple/{turn}" + ".png")
+	plt.clf()
 
-    random_index = random.randint(0, (len(video_list)-1))
+def xownsy_graph(array, turn, percentage):
+	loglog = False
 
-    video = video_list[random_index]
-    video_id = video["id"]["videoId"]
-    video_title = video["snippet"]["title"]
+	total = np.sum(array)
+	length = len(array)
+	bins = 20
+	binsize = int(length/bins)
 
-    return video_id, video_title
+	p_percent_list = []
+	m_percent_list = []
 
-def get_viewcounts(youtube_api_key, video_id_list):
+	for i in range(0, bins+1):
+		last_index = binsize*i
+		indices = list(range(0, last_index))
+		summed = array[indices].sum()
+		m_percentage = int(summed/total*100)
+		p_percentage = int(i*(100/bins))
 
-    # Disable OAuthlib's HTTPS verification when running locally.
-    # *DO NOT* leave this option enabled in production.
-    os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"
+		m_percent_list.append(m_percentage)
+		p_percent_list.append(p_percentage)
 
-    api_service_name = "youtube"
-    api_version = "v3"
+	# plt.plot(p_percent_list, m_percent_list, 'o')
 
-    youtube = googleapiclient.discovery.build(
-        api_service_name, api_version, developerKey=youtube_api_key)
+	plt.xlabel("Percentage of participants")
+	plt.ylabel("Percentage of wealth (cumulative)")
 
-    repeat_times = (len(video_id_list)//50) + 1
+	x = p_percent_list
+	y = m_percent_list
+	plt.plot(x, y, 'o')
 
-    viewcount_list = []
+	weights = np.ones((len(x)), dtype=int)
+	weights[0] = weights[0]*10
+	weights[-1] = weights[-1]*10
 
-    for repeat in range(repeat_times):
-        try:
-            request_list = video_id_list[:50]
-            video_id_list = video_id_list[50:]
-
-            ids_string = str(request_list)
-            ids_string = ids_string.replace("[", "")
-            ids_string = ids_string.replace("]", "")
-            ids_string = ids_string.replace("'", "")
-
-            request = youtube.videos().list(
-                part="statistics", # get all stats
-                maxResults=50, #50 is max amount of results per page
-                id= ids_string
-            )
-            response = request.execute()
-            items = response["items"]
-
-            for item in items:
-                viewcount = int(item["statistics"]["viewCount"])
-                viewcount_list.append(viewcount)
-        except:
-            pass
-
-    return viewcount_list
+	polyfit = np.polyfit(x, y, deg=2)
+	polynomial = np.poly1d(polyfit)
+	print(polynomial)
 
 
-def run_50(youtube_api_key):
-    id_list = [START_VID_ID]
-    title_list = [START_VID_TITLE]
-    viewcount_list = []
+	plt.plot(x, polynomial(x), "-")
+	print(polyfit)
+	formula = "y=%.4fx^2+(%.4fx)+(%.4f)" %(polyfit[0], polyfit[1], polyfit[2])
+	print(formula)
 
-    # get all video ids
-    video_id = START_VID_ID
-    for number in range(1, 80):
-        try:
-            get_related_videos(youtube_api_key, video_id)
-            video_id, video_title = get_random_video(video_id)
-            id_list.append(video_id)
-            title_list.append(video_title)
-        except:
-            pass
+	if loglog:
+		title_string = "Percentage of cumulative wealth owned by the participants \n loglog, p={p}, after {tp} periods"
+		plt.title(title_string.format(p=percentage, tp=turn))
 
-    try:
-        viewcount_list = get_viewcounts(youtube_api_key, id_list)
-    except:
-        pass
+		plt.loglog()
+		plt.savefig(f"figures/loglog/{turn}" + ".png")
 
-    return viewcount_list, id_list, title_list
+	else:
+		linear_line = np.linspace(0, 100, 100)
 
-def run_low_cost():
-    id_list = []
-    title_list = []
+		title_string = "Percentage of cumulative wealth owned by the participants \n p={p}, after {tp} periods"
+		plt.title(title_string.format(p=percentage, tp=turn))
 
-    count = 0
-    for filename in os.listdir(JSON_FILES_PATH):
-        if filename.endswith(".json"):
-            count += 1
-            if count <= 1000:
-                with open(JSON_FILES_PATH + filename, "r") as file:
-                    json_data = json.load(file)
+		plt.plot(linear_line, linestyle="--", color="darkorange")
+		plt.savefig(f"figures/normal/{turn}" + ".png")
 
-                video_list = json_data["items"]
-
-                for video in video_list:
-                    video_id = video["id"]["videoId"]
-                    id_list.append(video_id)
-                    video_title = video["snippet"]["title"]
-                    title_list.append(video_title)
-
-    viewcount_list = get_viewcounts(YOUTUBE_API_KEY, id_list)
-
-    print(id_list)
-    print(title_list)
-    print(viewcount_list)
-
-    graph_list = sorted(viewcount_list, reverse=True)
-    show_graph(graph_list)
-    show_graph(graph_list, loglog=True)
+	plt.clf()
 
 
-def run_code():
-    viewcount_list, id_list, title_list = run_50(YOUTUBE_API_KEY)
-    print(id_list)
-    print(title_list)
-    print(viewcount_list)
-
-    graph_list = sorted(viewcount_list, reverse=True)
-    show_graph(graph_list)
-    show_graph(graph_list, loglog=True)
-
-
-# execute the code
-# run_code()
-run_low_cost()
+rungame(10000, 2001, 5)
