@@ -8,16 +8,16 @@ def rungame(players, turns, percentage):
 	for turn in range(turns):
 		array = doturn(array, percentage)
 
-	array = np.sort(array)
-	# array = array[::-1]
+		array = np.sort(array)
 
-	# simple_graph(array)
-	xownsy_graph(array)
+		if turn%100 == 0:
+			xownsy_graph(array, turn+1, percentage)
+			# simple_graph(array, turn)
 
-	print(np.sum(array))
+	# print(np.sum(array))
 
-	print(np.sum(array) - players*start_amount)
-	print(len(array[np.where(array < start_amount)])) 
+	# print(np.sum(array) - players*start_amount)
+	# print(len(array[np.where(array < start_amount)])) 
 
 
 
@@ -39,14 +39,14 @@ def doturn(array, percentage):
 
 	return array
 
-def simple_graph(array):
-	# plt.loglog()
+def simple_graph(array, turn):
+	plt.loglog()
 	plt.plot(array)
-	plt.show()
+	plt.savefig(f"figures/simple/{turn}" + ".png")
+	plt.clf()
 
-def xownsy_graph(array):
-	# plt.hist(array, 10, density=100)
-	# plt.show()
+def xownsy_graph(array, turn, percentage):
+	loglog = False
 
 	total = np.sum(array)
 	length = len(array)
@@ -66,16 +66,46 @@ def xownsy_graph(array):
 		m_percent_list.append(m_percentage)
 		p_percent_list.append(p_percentage)
 
-	plt.scatter(p_percent_list, m_percent_list)
+	# plt.plot(p_percent_list, m_percent_list, 'o')
 
 	plt.xlabel("Percentage of participants")
 	plt.ylabel("Percentage of wealth (cumulative)")
 
-	linear_line = np.linspace(0, 100, 100)
+	x = p_percent_list
+	y = m_percent_list
+	plt.plot(x, y, 'o')
 
-	plt.plot(linear_line, color="darkorange")
-	# plt.loglog()
-	plt.show()
+	weights = np.ones((len(x)), dtype=int)
+	weights[0] = weights[0]*10
+	weights[-1] = weights[-1]*10
+
+	polyfit = np.polyfit(x, y, deg=2)
+	polynomial = np.poly2d(polyfit)
+	print(polynomial)
 
 
-rungame(10000, 100, 10)
+	plt.plot(x, polynomial(x), "-")
+	print(polyfit)
+	formula = "y=%.4fx^2+(%.4fx)+(%.4f)" %(polyfit[0], polyfit[1], polyfit[2])
+	print(formula)
+
+	if loglog:
+		title_string = "Percentage of cumulative wealth owned by the participants \n loglog, p={p}, after {tp} periods"
+		plt.title(title_string.format(p=percentage, tp=turn))
+
+		plt.loglog()
+		plt.savefig(f"figures/loglog/{turn}" + ".png")
+
+	else:
+		linear_line = np.linspace(0, 100, 100)
+
+		title_string = "Percentage of cumulative wealth owned by the participants \n p={p}, after {tp} periods"
+		plt.title(title_string.format(p=percentage, tp=turn))
+
+		plt.plot(linear_line, linestyle="--", color="darkorange")
+		plt.savefig(f"figures/normal/{turn}" + ".png")
+
+	plt.clf()
+
+
+rungame(10000, 2001, 5)
