@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from scipy.optimize import curve_fit
 
 def rungame(players, turns, percentage):
 	start_amount = 100
@@ -10,12 +11,14 @@ def rungame(players, turns, percentage):
 
 		array = np.sort(array)
 
-		if (turn-1)%100 == 0:
+		if (turn-1)%50 == 0:
 			# simple_graph(array, turn)
-			xbyy(array, turn, percentage)
+			# xbyy(array, turn, percentage)
 
-			# xownsy_graph(array, turn+1, percentage)
+			xownsy_graph(array, turn, percentage)
 			# simple_graph(array, turn)
+
+			# estimate_curve(array)
 
 	# print(np.sum(array))
 
@@ -42,18 +45,32 @@ def doturn(array, percentage):
 
 	return array
 
+def estimate_curve(array):
+	x = np.arange(len(array))
+	y = array
+
+	# popt, _ = curve_fit(lambda t,a,b: a*np.exp(b*t),  x,  y)
+
+	polyfit = np.polyfit(x, np.log(y), 2, w=np.sqrt(y))
+	print(polyfit)
+	polynomial = np.poly1d(polyfit)
+	print(polynomial)
+	plt.plot(x, polynomial(x), "-")
+
+
 def simple_graph(array, turn):
 	plt.loglog()
 	plt.plot(array)
-	plt.xlabel("Euro")
-	plt.ylabel("Participant, sorted by least money first")
-	plt.title("Amount of money per participant")
+	plt.xlabel("Participant, sorted by least money first")
+	plt.ylabel("Euro")
+	plt.title(f"Amount of money per participant, time periods={turn}")
+
 	plt.savefig(f"figures/simple/loglog/{turn}" + ".png")
 	plt.clf()
 
 def xbyy(array, turn, percentage):
 	total = np.sum(array)
-	bins = 10
+	bins = 20
 	binsize = int(len(array)/bins)
 
 	p_wealth_list = []
@@ -67,7 +84,7 @@ def xbyy(array, turn, percentage):
 		p_wealth_list.append(summed/total*100)
 
 	plt.loglog()
-	p_wealth_list = p_wealth_list[::-1]
+	# p_wealth_list = p_wealth_list[::-1]
 	plt.bar(np.arange(bins), p_wealth_list)
 	# plt.xticks(np.arange(bins), np.full(bins, f"{int(100/bins)}%"))
 	plt.ylabel("Percentage of wealth")
@@ -77,17 +94,14 @@ def xbyy(array, turn, percentage):
 	# x = np.arange(bins)
 	# y = p_wealth_list
 
-	# weights = np.ones((len(x)), dtype=int)
-	# weights[0] = weights[0]*10
-	# weights[-1] = weights[-1]*10
-
-	# polyfit = np.polyfit(x, y, deg=2, w=weights)
+	# polyfit = np.polyfit(x, np.log(y), 2, w=np.sqrt(y))
+	# print(polyfit)
 	# polynomial = np.poly1d(polyfit)
 	# print(polynomial)
 	# plt.plot(x, polynomial(x), "-")
 
 
-	plt.savefig(f"figures/question3/{turn}" + ".png")
+	plt.savefig(f"figures/question3/loglog/{turn}" + ".png")
 	plt.clf()
 
 
@@ -130,10 +144,10 @@ def xownsy_graph(array, turn, percentage):
 	# print(polynomial)
 
 
-	plt.plot(x, polynomial(x), "-")
-	print(polyfit)
-	formula = "y=%.4fx^2+(%.4fx)+(%.4f)" %(polyfit[0], polyfit[1], polyfit[2])
-	print(formula)
+	# plt.plot(x, polynomial(x), "-")
+	# print(polyfit)
+	# formula = "y=%.4fx^2+(%.4fx)+(%.4f)" %(polyfit[0], polyfit[1], polyfit[2])
+	# print(formula)
 
 	if loglog:
 		title_string = "Percentage of cumulative wealth owned by the participants \n loglog, p={p}, after {tp} periods"
