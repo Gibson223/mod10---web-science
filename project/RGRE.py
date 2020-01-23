@@ -1,6 +1,5 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from scipy.optimize import curve_fit
 
 def rungame(players, turns, percentage):
 	start_amount = 100
@@ -106,7 +105,6 @@ def xbyy(array, turn, percentage):
 
 
 def xownsy_graph(array, turn, percentage):
-	loglog = False
 
 	total = np.sum(array)
 	length = len(array)
@@ -135,37 +133,23 @@ def xownsy_graph(array, turn, percentage):
 	y = m_percent_list
 	plt.plot(x, y, 'o')
 
-
-	# weights = np.ones((len(x)), dtype=int)
-	# weights[0] = weights[0]*10
-	# weights[-1] = weights[-1]*10
-	# polyfit = np.polyfit(x, y, deg=2)
-	# polynomial = np.poly1d(polyfit)
-	# print(polynomial)
+	title_string = "Percentage of cumulative wealth owned by the participants \n loglog, p={p}, after {tp} periods"
+	plt.title(title_string.format(p=percentage, tp=turn))
+	plt.loglog()
+	plt.savefig(f"figures/model/xownsy/loglog/{turn}" + ".png")
 
 
-	# plt.plot(x, polynomial(x), "-")
-	# print(polyfit)
-	# formula = "y=%.4fx^2+(%.4fx)+(%.4f)" %(polyfit[0], polyfit[1], polyfit[2])
-	# print(formula)
 
-	if loglog:
-		title_string = "Percentage of cumulative wealth owned by the participants \n loglog, p={p}, after {tp} periods"
-		plt.title(title_string.format(p=percentage, tp=turn))
-
-		plt.loglog()
-		plt.savefig(f"figures/loglog/{turn}" + ".png")
-
-	else:
-		linear_line = np.linspace(0, 100, 100)
-
-		title_string = "Percentage of cumulative wealth owned by the participants \n p={p}, after {tp} periods"
-		plt.title(title_string.format(p=percentage, tp=turn))
-
-		plt.plot(linear_line, linestyle="--", color="darkorange")
-		plt.savefig(f"figures/normal/{turn}" + ".png")
+	linear_line = np.linspace(0, 100, 100)
+	title_string = "Percentage of cumulative wealth owned by the participants \n p={p}, after {tp} periods"
+	plt.title(title_string.format(p=percentage, tp=turn))
+	plt.plot(linear_line, linestyle="--", color="darkorange")
+	plt.xscale('linear')
+	plt.yscale('linear')
+	plt.savefig(f"figures/model/xownsy/{turn}" + ".png")
 
 	plt.clf()
+
 
 
 rungame(10000, 2001, 5)
